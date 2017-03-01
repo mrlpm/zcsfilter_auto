@@ -1,0 +1,43 @@
+#!/bin/bash
+
+usage(){
+  echo "Usage: $0 accounts_file keywords_file rule_name account_redirect"
+  exit 1
+}
+
+if [ $# -lt 4 ]
+then
+    echo "Missing arguments" |logger -s -i -t $(basename $0)
+    usage
+    exit 1
+fi
+
+FILE_ACC=$1
+FILE_KEYWORD=$2
+FILTER_NAME="$3"
+ACCOUNT_REDIRECT="$4"
+
+prepare_filters(){
+    subjects=""
+    bodys=""
+
+    for word in $(cat ${FILE_KEYWORD})
+    do
+        subject="header \"subject\" contains \"${word}\""
+        subjects="$subjects $subject"
+        body="body contains \"${word}\""
+        bodys="$bodys $body"
+    done
+    FILTER="$subjects $bodys"
+}
+
+prepare_filters
+for acc in $(cat $FILE_ACC)
+do
+    echo "zmmailbox -z -m ${acc} afrl \"${FILTER_NAME}\" active any ${FILTER} redirect \"${ACCOUNT_REDIRECT}\" keep stop" |logger -s -i -t $(basename $0)
+    su - zimbra -c "zmmailbox -z -m ${acc} afrl \"${FILTER_NAME}\" active any ${FILTER} redirect \"${ACCOUNT_REDIRECT}\" keep stop"
+    echo "zmmailbox -z -m ${acc} aofrl \"${FILTER_NAME}\" active any ${FILTER} keep redirect \"${ACCOUNT_REDIRECT}\" stop"|logger -s -i -t $(basename $0)
+    su - zimbra -c "zmmailbox -z -m ${acc} aofrl \"${FILTER_NAME}\" active any ${FILTER} keep redirect \"${ACCOUNT_REDIRECT}\" stop"
+    echo "zmprov sac ${acc} itmfilter" |logger -s -i -t $(basename $0)
+    su - zimbra -c "zmprov sac ${acc} itmfilter"
+done

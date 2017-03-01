@@ -1,0 +1,26 @@
+#!/bin/bash
+usage(){
+  echo "Usage: $0 accounts_file FILTER_NAME COS"
+  exit 1
+}
+
+if [ $# -lt 3 ]
+then
+    echo "Missing arguments" |logger -s -i -t $(basename $0)
+    usage
+    exit 1
+fi
+
+FILE_ACC=$1
+FILTER_NAME="$2"
+COS=$3
+
+for acc in $(cat ${FILE_ACC})
+do
+    echo "zmprov sac ${acc} ${COS}"|logger -s -i -t $(basename $0)
+    su - zimbra -c "zmprov sac ${acc} ${COS}"
+    echo "zmmailbox -z -m ${acc} dfrl ${FILTER_NAME}"|logger -s -i -t $(basename $0)
+    su - zimbra -c "zmmailbox -z -m ${acc} dfrl ${FILTER_NAME}"
+    echo "zmmailbox -z -m ${acc} dofrl ${FILTER_NAME}"|logger -s -i -t $(basename $0)
+    su - zimbra -c "zmmailbox -z -m ${acc} dofrl ${FILTER_NAME}"
+done
