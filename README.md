@@ -1,7 +1,7 @@
 # zcsfilter_auto
 Bash Scripts for automatic filter rules in Zimbra&reg;
 
-##Requirements
+## Requirements
 * Create a COS ( Class of Service ) without preferences options for users
 * Create a file with accounts to apply rules
 * Create a file with keywords to usage in rules
